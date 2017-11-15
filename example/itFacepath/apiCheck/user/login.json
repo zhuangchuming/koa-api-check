@@ -1,0 +1,40 @@
+{
+	"name":"测试登录接口",
+	"url":"/apiCheck/user/login",
+	"method":"POST",
+	"params": {
+		"type":{
+			"rem":"类型",
+			"need":true,//
+			"type":"int",
+			"enum":[1,2,3],//1表示账号，2表示邮箱，3表示手机
+		},
+		"account":{
+			"rem":"账号,邮箱,手机",
+			"need":true,//
+			"type":"string",
+		},
+		"pwd":{
+			"rem":"用户密码",
+			"need":true,//
+			"type":"string",
+			"len":[6,18]
+		}
+	},
+	"error"://这里的error值得是ret的no返回码
+	{
+		"400":"账号或密码错误",
+	},
+	"ret":
+	{
+		"no": 200, //返回码
+		"msg":"出错或成功信息", //成功时可能无此项或为null
+		"type":"custom",
+		"sex":1,
+		"phone":"13300222200",
+		"height":2001,//单位默认cm
+		"head": "/uploads/nxKlq3Jv12Dy0pWi7EZanFdH.png",
+		"mail":"123456@qq.com"
+
+	}
+}
