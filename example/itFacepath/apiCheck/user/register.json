@@ -56,6 +56,13 @@
 			"reg":"/^[^@]+@[^@]+\\.[^@]+$/"
 		}
 	},
+	"grant":"{S}",//{S} 为 session对象 req.session
+	"check":[
+		//不满足R条件,则会返回M消息; {}表示的是请求的数据:req.body || req.query
+		{"R":"{}.pwd=={}.pwd1","M":"两次输入的密码不一致，请重新输入"},
+		//{U}表示用户必须登录之后,角色必须是admin才能注册 : {U} = req.session.user
+		{"R":"{}.type!='admin' || ({U} && {U}.roleName=='admin')","M":"登录管理员才能申请管理员账号"}
+	],
 	"error"://这里的error值得是ret的no返回码
 	{
 		"5001":"账号已存在，请使用别的账号",

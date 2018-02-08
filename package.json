@@ -1,6 +1,6 @@
 {
   "name": "koa-api-check",
-  "version": "1.0.1",
+  "version": "1.0.6",
   "author": "zhuangchuming <522236495@qq.com>",
   "dependencies": {
     "koa-formpart": "^1.0.0",

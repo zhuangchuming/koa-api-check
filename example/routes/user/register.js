@@ -6,12 +6,11 @@ router.post('/register',async (ctx,next)=>{
 	if(await User.findOne({account:body.account}).exec()){
 		throw Error(5001);
 	}
-	if(body.pwd != body.pwd1){
-		throw Error(5002);
+	if(body.head) {
+		let path = body.head.path;
+		let url = '/uploads'+path.substring(path.lastIndexOf('/'),path.length);
+		body.head = url;
 	}
-	let path = body.head.path;
-	let url = '/uploads'+path.substring(path.lastIndexOf('/'),path.length);
-	body.head = url;
 	let mP = await User.find({}).sort({uID:-1}).limit(1).exec();
 	let uID = 1;
 	if(mP && mP[0]){
