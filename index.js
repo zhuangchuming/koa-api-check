@@ -4,7 +4,7 @@ var path = require('path');
 
 var JSON5 = require('json5');
 var typeis = require('type-is');
-var coForm = require('co-formpart');
+var coForm = require('koa-formpart');
 
 let itCountpath = null;//itCount.json 指定输出接口访问统计文件
 let interFaceRoot = null;//接口文档根目录
