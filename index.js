@@ -212,7 +212,7 @@ function CheckParams(data, query)
             //检验必要的请求参数,非必要参数则不验证
             if (par.need&&null==val) {return`缺少${par.lbl?par.lbl:(par.rem?par.rem:key)}参数。`;}
             //若未传,且有默认值,则设置默认值,然后继续向下检验默认值
-            if(null!=par.default&&null==val){query[key]=par.default;val = par.default;RES.usedefault = true;}
+            if(null!=par.default&&null==val){query[key]=par.default;val = par.default;CTX.usedefault = true;}
             if(null==val){continue;}//未传的非必须参数不需要校验
             //参数类型
             if(par.type) {
@@ -371,6 +371,7 @@ async function JustifyReq(ctx, next)
                         return ;
                     }
                 }catch(err){
+                    _formatErr({no:500,msg:`${err}}`});
                     return ;
                 }
             }
