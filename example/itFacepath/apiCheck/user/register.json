@@ -21,6 +21,11 @@
 			"type":"string",//密码6-18位
 			"len":[6,18]
 		},
+		"test":{
+			"rem":"ceshi",
+			"need":true,
+			"type":"boolean",
+		},
 		"type":{
 			"rem":"用户类型",
 			"need":true,

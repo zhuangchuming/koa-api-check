@@ -229,6 +229,11 @@ function CheckParams(data, query)
                             query[key] = parseFloat(val);
                             val = query[key];
                             break;
+                        case 'boolean':
+                            if(par.type == 'boolean'&&val.constructor!=Boolean&&(val.trim()!="false"&&val.trim()!="true"))throw Error('类型错误');
+                            query[key]=(val.trim()==="false"?false:true);
+                            val = query[key];
+                            break;
                         case 'string':if(val.constructor.name != 'String')throw Error('类型错误');break;
                         case 'object':if(val.constructor.name != 'Object')throw Error('类型错误');break;
                         case 'array':if(val.constructor.name != 'Array')throw Error('类型错误');break;
@@ -398,7 +403,9 @@ async function JustifyReq(ctx, next)
         if (err.message && TPL && TPL.error && TPL.error[err.message]) {
             // console.log('tttt',data.error[err.message])
             _formatErr({no: err.message, msg: TPL.error[err.message]})
-        } else {
+        } else if(err.no){
+            _formatErr(err);
+        } else{
             _formatErr({no: 500, msg: err.message+'/n'+err.stack});
         }
         if(TPL && TPL.hasFile){

@@ -62,6 +62,7 @@ eg:![Image](https://github.com/zhuangchuming/koa-api-check/blob/master/img/1.jpg
         }
     }
 ## 接口定义参数解析
+## 接口定义参数解析
 > name : String 接口名称
 
 > url : String 接口url，需注意命名规则
@@ -71,13 +72,32 @@ eg:![Image](https://github.com/zhuangchuming/koa-api-check/blob/master/img/1.jpg
 > grant : String | Array js伪码，定义权限检查规则，非必需
 
 ```
+可以使用校验的参数：
+1、使用"{S}"作为session的引用。
+2、使用"{}"作为请求参数 req.body或req.query的引用。
+3、使用"{U}"作为req.session.user的引用，表示用户已经登录；
 使用方法：
-1、需要使用"U"作为session的引用。
-eg ："grant":"U.fromApp"，表示请求需要被设置名为：fromApp 的session。
-eg : "grant":"U.user && 3 >= U.user.grade",表示用户必须已经登录（登录后设置user的session），并且用户的grade等级必须不大于3（假设grade=1是最大等级），这个grade是你设置的user对象下的一个参数，如下图：
+eg ："grant":"{S}.fromApp"，表示请求需要被设置名为：fromApp 的session。
+eg : "grant":"{U} && 3 >= {U}.grade",表示用户必须已经登录（登录后设置user的session），并且用户的grade等级必须不大于3（假设grade=1是最大等级），这个grade是你设置的user对象下的一个参数。
 ```
 
+> check ：Object | Array js伪码对象，定义条件检查 非必需
 
+```
+可以使用校验的参数：
+1、使用"{S}"作为session的引用。
+2、使用"{}"作为请求参数 req.body或req.query的引用。
+3、使用"{U}"作为req.session.user的引用，表示用户已经登录；
+使用方法：
+eg ：
+"check":[
+    //不满足R条件,则会返回M消息; {}表示的是请求的数据:req.body || req.query
+    {"R":"{}.pwd=={}.pwd1","M":"两次输入的密码不一致，请重新输入"},
+    //{U}表示用户必须登录之后,角色必须是admin才能注册 : {U} = req.session.user
+    {"R":"{}.type!='admin' || ({U} && {U}.roleName=='admin')","M":"登录管理员才能申请管理员账号"}
+]
+"check":{"R":"{}.pwd=={}.pwd1","M":"两次输入的密码不一致，请重新输入"},
+```
 
 
 > error : {...}
@@ -85,7 +105,7 @@ eg : "grant":"U.user && 3 >= U.user.grade",表示用户必须已经登录（登�
 #### 作用：标准错误输出，不再通过代码来指定返回内容，同时能够保证错误返回与接口文档一致，高效维护接口文档。
 
 eg：
-    
+
     "error":{
         //默认返回
 	    "401":"您尚未登录，或者已经在别处登录",
@@ -102,66 +122,131 @@ eg：
 >
     eg: throw Error(4001)
     客户端收到如下：
-eg:![Image](https://github.com/zhuangchuming/koa-api-check/blob/master/img/3.jpeg)
-    
+eg:![Image](https://github.com/zhuangchuming/express-api-check/blob/master/img/3.jpeg)
+
 
 
 > params : {...} 入口参数定义，非必需，如未定义或定义为空对象表示无入口参数：
 
 #### params参数
 1. rem : String 备注（非必需）
-2. need : Boolean 检查该参数是否必须提交
-3. reg : String 正则合法检查，定义此参数必须符合的正则表达式
-4. len : String|Array 长度范围定义。
-> 控制参数的长度
+2. lbl : String 异常返回时，代替key的名字
+3. need : Boolean 检查该参数是否必须提交
+```
+need使用举例：
+"pwd":{
+	"rem":"用户密码",
+	"need":true,
+	"type":"string",
+	"len":[6,18]
+},
+```
+4. reg : String 正则合法检查，定义此参数必须符合的正则表达式
+```
+使用举例,定义如下两个参数：
+"head":{
+	"rem":"头像",
+	"type":"file",
+	"len":"[0,204800]",//不超过200k
+	"reg":"/\\.(jpe?g|png|gif)$/"//仅允许jpg,png,gif文件
+},
+"mail":{
+	"rem":"邮箱",
+	"type":"string",
+	"reg":"/^[^@]+@[^@]+\\.[^@]+$/"
+},
+```
+5. len : String|Array 长度范围定义。
+```
+作用：控制参数值的长度
+支持类型：string,file,array,object
 
-    格式如下：
-> 
-	//支持对象，也支持字符串
-    "len":"[1,null]",//表示1到正无穷
-	"len":[1,null],//表示1到正无穷
-	"len":"[null,8)",//表示最大值为8,不包含8
-	"len":"[1,8]",//表示值得范围在1到8之间
-    "len":[1,8],//表示1到8
-	"len":"[1,8)",//表示1到8,不包含8
-	"len":"(1,8)",//表示1到8,不包含1和8
-	"len":"(1,8]",//表示1到8,不包含1
-	注：[],()对null没有实际的作用
-    
-    1、当参数的type为"string"时，表示指定参数的长度范围
-	    eg:表示btnName为长度不能小于1，不能大于6的字符类型
-		"btnName":{
-		    "len":"[1,6]" // [1,6]
-		},
-        eg:表示btnName为长度不能小于1
-		"btnName":{
-		    "len":[1,null] // "[1,null]"
-		},
-	2、当参数的type为"number"、"int"、"float"时，表示指定参数的取值范围
-	    eg:表示id的取值范围在 -1到无穷大
-	        "id":{
-                "len":[-1,null]
-            },
-	3、当参数的type为"object"时，表示对象长度范围
-        "person":{//对象的长度大于1，且不大于8
-            "len":"(1,8]",
-        },
-    4、当参数的type为"array"时，表示数组长度范围
-        "ids":{
-            "len":"(1,8]",//表示数组长度大于1，且不大于8
-        }
-    5、当参数的type为"file"时，表示文件的字节数
-        "file":{
-            "len":[1,1048576]//表示文件长度不大于1M，
-        }
+格式如下：支持使用数组和字符串
+"len":"[1,null]",//表示1到正无穷
+"len":[1,null],//表示1到正无穷
+"len":"[null,8)",//表示最大值为8,不包含8
+"len":"[1,8]",//表示值得范围在1到8之间
+"len":[1,8],//表示1到8
+"len":"[1,8)",//表示1到8,不包含8
+"len":"(1,8)",//表示1到8,不包含1和8
+"len":"(1,8]",//表示1到8,不包含1
+注：[],()对null没有实际的作用
+1、当参数的type为"string"时，表示指定参数的长度范围
+    eg:表示btnName为长度不能小于1，不能大于6的字符类型
+	"btnName":{
+	    "len":"[1,6]" // [1,6]
+	},
+    eg:表示btnName为长度不能小于1
+	"btnName":{
+	    "len":[1,null] // "[1,null]"
+	},
+2、当参数的type为"object"时，表示对象长度范围
+    "person":{//对象的长度大于1，且不大于8
+        "len":"(1,8]",
+    },
+3、当参数的type为"array"时，表示数组长度范围
+    "ids":{
+        "len":"(1,8]",//表示数组长度大于1，且不大于8
+    }
+4、当参数的type为"file"时，表示文件的字节数
+    "file":{
+        "len":[1,1048576]//表示文件长度不大于1M，
+    }
 	注意：boolean类型没有长度限制
-	
-5. type：String类型
->     取值：array数组,object对象,number|int整型,float浮点,string字符串,file文件
+```
 
-6. enum : Array 使用枚举方式定义可能的合法值
+6. range : String | Array 取值范围定义
+```
+支持类型：string,int,float
+使用方式与len一致
+string类型使用举例：
+"account":{
+	"lbl":"学生账号",//或者使用rem也可以,如果有lbl和rem,那么错误提示信息,优先使用lbl;
+	"rem":"账号",
+	"need":true,//必传
+	"type":"string",
+	"len":"(6,16)",
+	"range":["a","z"]//以小写a-z为开头的都可以通过校验, eg: ABC 则会通不过
+},
+int或者float的使用举例
+"height":{
+	"rem":"身高",//cm
+	"type":"float",
+	"range":"(20,null]"//身高不能小于等于20cm以下
+},
+
+
+```
+
+7. type：String类型
+>     取值：array数组,object对象（仅content-type:application/json时支持）
+,int整型,float浮点,string字符串,file文件（仅content-type:multipart/form-data时支持）
+
+8. enum : Array 使用枚举方式定义可能的合法值
+```
 数组成员应该和type定义的数据类型相同
+eg:
+"enum":["admin","custom"]
+"enum":[1,2,3,4]
+使用举例：
+"type":{
+	"rem":"用户类型",
+	"need":true,
+	"type":"string",
+	"enum":["admin","custom"]//custom：普通用户，admin：管理员
+},
+```
 
+9.default：任意值
+```
+使用举例
+"sex":{
+	"rem":"性别",
+	"type":"int",
+	"enum":[0,1],//0女，1男
+	"default":1 //此处使用默认值,在没有值的情况下,会使用该值
+},
+```
 
 ## 接口文档定义举例：
 > POST 提交文件,创建用户信息示例
