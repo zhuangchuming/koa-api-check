@@ -216,6 +216,7 @@ function CheckParams(data, query)
             if(null==val){continue;}//未传的非必须参数不需要校验
             //参数类型
             if(par.type) {
+                let isObj=true;
                 try{
                     switch(par.type.toLowerCase()){
                         case 'number':
@@ -231,11 +232,23 @@ function CheckParams(data, query)
                             break;
                         case 'boolean':
                             if(par.type == 'boolean'&&val.constructor!=Boolean&&(val.trim()!="false"&&val.trim()!="true"))throw Error('类型错误');
-                            query[key]=(val.trim()==="false"?false:true);
+                            if(val.constructor!=Boolean)query[key]=(val.trim()==="false"?false:true);
                             val = query[key];
                             break;
-                        case 'string':if(val.constructor.name != 'String')throw Error('类型错误');break;
-                        case 'object':if(val.constructor.name != 'Object')throw Error('类型错误');break;
+                        case 'object':
+                            if(val.constructor != Object){
+                                try{
+                                    val=JSON.parse(val);
+                                }catch(err){isObj=false;}
+                            }
+                            if(!isObj)throw Error('类型错误');break;
+                        case 'array':
+                            if(val.constructor != Array){
+                                try{
+                                    val=JSON.parse(val);
+                                }catch(err){isObj=false}
+                            }
+                            if(!isObj)throw Error('类型错误');break;
                         case 'array':if(val.constructor.name != 'Array')throw Error('类型错误');break;
                         case 'file':if(val.path && !isExist(val.path)) throw Error('类型错误');break;
                         default :

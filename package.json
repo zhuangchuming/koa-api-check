@@ -1,6 +1,6 @@
 {
   "name": "koa-api-check",
-  "version": "1.1.2",
+  "version": "1.1.6",
   "author": "zhuangchuming <522236495@qq.com>",
   "dependencies": {
     "json5": "^0.5.1",
