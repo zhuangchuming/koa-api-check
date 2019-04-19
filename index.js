@@ -213,6 +213,7 @@ function CheckParams(data, query)
             if (par.need&&null==val) {return`缺少${par.lbl?par.lbl:(par.rem?par.rem:key)}参数。`;}
             //若未传,且有默认值,则设置默认值,然后继续向下检验默认值
             if(null!=par.default&&null==val){query[key]=par.default;val = par.default;CTX.usedefault = true;}
+            if(null!=par.def&&null==val){query[key]=par.def;val = par.def;CTX.usedefault = true;}
             if(null==val){continue;}//未传的非必须参数不需要校验
             //参数类型
             if(par.type) {
@@ -230,6 +231,7 @@ function CheckParams(data, query)
                             query[key] = parseFloat(val);
                             val = query[key];
                             break;
+                        case 'string':if(val.constructor.name != 'String')throw Error('类型错误');break;
                         case 'boolean':
                             if(par.type == 'boolean'&&val.constructor!=Boolean&&(val.trim()!="false"&&val.trim()!="true"))throw Error('类型错误');
                             if(val.constructor!=Boolean)query[key]=(val.trim()==="false"?false:true);
@@ -251,6 +253,15 @@ function CheckParams(data, query)
                             if(!isObj)throw Error('类型错误');break;
                         case 'array':if(val.constructor.name != 'Array')throw Error('类型错误');break;
                         case 'file':if(val.path && !isExist(val.path)) throw Error('类型错误');break;
+                        case 'json':
+                            try{
+                                let t=JSON.parse(val);
+                                query[key]=t;
+                                val=t;
+                            }catch(err){
+                                throw Error('json格式错误');
+                            }
+                            break;
                         default :
                             if(val.constructor.name != 'String')throw Error('类型错误');
                     }
@@ -293,7 +304,7 @@ function CheckParams(data, query)
             //枚举型判断参数是否在设置范围内
             if (par.enum && par.enum.indexOf(val)<0) {return `${errkey}参数只能是${par.enum}。`;}
             //正则验证参数是否合法
-            if(par.reg && !eval(par.reg).test((par.type == 'file' ? val.name:val))){return `${errkey}格式错误`;}
+            if(par.reg && !eval(par.reg).test((par.type == 'file' ? val.name:par.type=='json'?JSON.stringify(val):val))){return `${errkey}格式错误`;}
             // RES.usedefault = null;
         }
     }
